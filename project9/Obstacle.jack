@@ -1,0 +1,119 @@
+class Obstacle {
+    field int x, y;
+    field int width, height;
+    field int gapStart, gapSize;
+    field boolean scored;
+    
+    constructor Obstacle new(int startY, int gap) {
+        let x = 0;
+        let y = startY;
+        let width = 511;
+        let height = 20;
+        let gapSize = gap;
+        let gapStart = 170;
+        let scored = false;
+        return this;
+    }
+    
+    method void update() {
+        var boolean wasOffScreen;
+        
+        let wasOffScreen = (y > 255);
+        
+        // First erase if visible
+        if ((y < 256) & ((y + height) > 0)) {
+            do erase();
+        }
+        
+        let y = y + 7;  // Move down
+        
+        // Reset when off screen
+        if (y > 255) {  
+            let y = -40;  // Move back up
+            let scored = false;  // Reset the scored flag
+            if (gapStart < 256) {
+                let gapStart = 270;
+            } else {
+                let gapStart = 150;
+            }
+        }
+        
+        // Only draw if visible
+        if ((y < 256) & ((y + height) > 0)) {
+            do draw();
+        }
+        
+        // If we just came back on screen, ensure scored is reset
+        if (wasOffScreen) {
+            let scored = false;
+        }
+        
+        return;
+    }
+    
+    method void draw() {
+        var int drawY;
+        // Calculate the visible part
+        if (y < 0) {
+            let drawY = 0;
+        } else {
+            let drawY = y;
+        }
+        
+        // Draw only if on screen
+        if (drawY < 256) {
+            do Screen.setColor(true);
+            do Screen.drawRectangle(x, drawY, gapStart, Math.min(y + height, 255));
+            do Screen.drawRectangle(gapStart + gapSize, drawY, x + width, Math.min(y + height, 255));
+        }
+        return;
+    }
+    
+    method void erase() {
+        var int drawY;
+        if (y < 0) {
+            let drawY = 0;
+        } else {
+            let drawY = y;
+        }
+        
+        if (drawY < 256) {
+            do Screen.setColor(false);
+            do Screen.drawRectangle(x, drawY, gapStart, Math.min(y + height, 255));
+            do Screen.drawRectangle(gapStart + gapSize, drawY, x + width, Math.min(y + height, 255));
+        }
+        return;
+    }
+
+    method void reset() {
+        let y = -40;  // Move back above screen
+        if (gapStart < 256) {
+            let gapStart = 300;  // Right position
+        } else {
+            let gapStart = 150;  // Left position
+        }
+        let scored = false;
+        return;
+    }
+
+    method boolean hasScored() {
+        return scored;
+    }
+
+    method void setScored() {
+        let scored = true;
+        return;
+    }
+
+    method int getX() { return x; }
+    method int getY() { return y; }
+    method int getHeight() { return height; }
+    method int getWidth() { return width; }
+    method int getGapStart() { return gapStart; }
+    method int getGapSize() { return gapSize; }
+    
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

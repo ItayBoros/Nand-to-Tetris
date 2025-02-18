@@ -1,0 +1,146 @@
+class Main {
+    function void main() {
+        var Brick brick;
+        var Obstacle obstacle;
+        var boolean exit, gameStarted, gameOver;
+        var char key;
+        var Score score;
+        
+        // Show instructions first
+        do Screen.clearScreen();
+        do Output.moveCursor(5, 25);
+        do Output.printString("Amazing Brick");
+        
+        do Output.moveCursor(8, 15);
+        do Output.printString("Use LEFT buttom to jump left");
+        
+        do Output.moveCursor(10, 15);
+        do Output.printString("Use RIGHT buttom to jump right");
+        
+        do Output.moveCursor(12, 15);
+        do Output.printString("Pass through the gaps to survive!");
+        
+        do Output.moveCursor(15, 20);
+        do Output.printString("Press SPACE to start");
+        
+        do Output.moveCursor(17, 20);
+        do Output.printString("Press ESC to exit");
+        
+        // Wait for space key to start
+        let gameStarted = false;
+        while (~gameStarted) {
+            let key = Keyboard.keyPressed();
+            if (key = 32) {  // Space key
+                let gameStarted = true;
+            }
+            if (key = 140) { // ESC key
+                return;
+            }
+            do Sys.wait(50);
+        }
+        
+        // Start the game
+        do Screen.clearScreen();
+        let brick = Brick.new(256, 128);
+        let obstacle = Obstacle.new(-40, 80);
+        let exit = false;
+        let gameOver = false;
+        let score = Score.new();
+        
+        // Game loop
+        while (~exit) {
+            if (~gameOver) {
+                
+                do brick.update();
+                do obstacle.update();
+                do score.draw();
+
+                // Check for collision
+                if (Main.checkCollision(brick, obstacle, score)) {
+                    let gameOver = true;
+                    // Show game over screen
+                    do Output.moveCursor(10, 25);
+                    do Output.printString("Game Over!");
+                    do Output.moveCursor(12, 20);
+                    do Output.printString("Press SPACE to restart");
+                }
+            } else {
+                // Handle restart
+                if (Keyboard.keyPressed() = 32) {  // Space key
+                    let gameOver = false;
+                    do Screen.clearScreen();
+                    do brick.reset(256, 128);
+                    do obstacle.reset();
+                    do score.reset();
+                }
+            }
+            
+            if (Keyboard.keyPressed() = 140) {  // ESC key
+                let exit = true;
+            }
+            
+            do Sys.wait(50);
+        }
+        
+        do brick.dispose();
+        do obstacle.dispose();
+        do score.dispose();
+        return;
+    }
+    
+    function boolean checkCollision(Brick b, Obstacle o, Score score) {
+        var int brickX, brickY, brickSize;
+        var int obstacleY, obstacleHeight, gapStart, gapSize;
+        var boolean inGap, nearGap, pastObstacle;
+        var int brickCenterX;
+        var boolean collision;
+        
+        let brickX = b.getX();
+        let brickY = b.getY();
+        let brickSize = b.getSize();
+        let brickCenterX = brickX + (brickSize / 2);
+        
+        let obstacleY = o.getY();
+        let obstacleHeight = o.getHeight();
+        let gapStart = o.getGapStart();
+        let gapSize = o.getGapSize();
+        
+        // Check if brick center is in or near the gap horizontally
+        let inGap = ((brickCenterX > gapStart) & (brickCenterX < (gapStart + gapSize)));
+        
+        // For collision, we use strict edge detection
+        let collision = false;
+        
+        // Check vertical overlap first
+        if ((brickY < (obstacleY + obstacleHeight)) & ((brickY + brickSize) > obstacleY)) {
+            // If there's vertical overlap, check horizontal collision with edges
+            // Left edge collision
+            if ((brickX + brickSize) > gapStart & (brickX < gapStart)) {
+                let collision = true;
+            }
+            // Right edge collision
+            if ((brickX < (gapStart + gapSize)) & ((brickX + brickSize) > (gapStart + gapSize))) {
+                let collision = true;
+            }
+            // Full left or right side collision
+            if ((brickX + brickSize) < gapStart) {
+                let collision = true;
+            }
+            if (brickX > (gapStart + gapSize)) {
+                let collision = true;
+            }
+        }
+        
+        // Check if brick has passed the obstacle (for scoring)
+        let pastObstacle = (brickY > (obstacleY + (obstacleHeight / 2)));
+        
+        // Score increment logic remains the same
+        if ((~o.hasScored()) & pastObstacle & inGap) {
+            do score.increment();
+            do o.setScored();
+        }
+        
+        return collision;
+    }
+
+}

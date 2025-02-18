@@ -1,0 +1,83 @@
+class Brick {
+    field int x, y;
+    field int size;
+    field int velocity;
+    
+    constructor Brick new(int startX, int startY) {
+        let x = startX;
+        let y = startY;
+        let size = 10;
+        let velocity = 0;
+        return this;
+    }
+
+    method int getX() { return x; }
+    method int getY() { return y; }
+    method int getSize() { return size; }
+    
+    method void update() {
+        var char key;
+        
+        do erase();
+        let key = Keyboard.keyPressed();
+
+        // Apply gravity
+        let velocity = velocity + 1;
+        if (velocity > 6) {
+            let velocity = 6;
+        }
+        let y = y + velocity;
+
+        // Movement with jumping
+        if (key = 130) {  // Left arrow
+            let x = x - 6;
+            let y = y - 4;
+            let velocity = -4;
+        }
+        if (key = 132) {  // Right arrow
+            let x = x + 6;
+            let y = y - 4;
+            let velocity = -4;
+        }
+
+        // Screen boundaries
+        if (x < 0) { let x = 0; }
+        if (x > (511 - size)) { let x = 511 - size; }
+        if (y < 0) { 
+            let y = 0;
+            let velocity = 0;
+        }
+        if (y > (255 - size)) { 
+            let y = 255 - size;
+            let velocity = 0;
+        }
+        
+        do draw();
+        return;
+    }
+
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x, y, x + size, y + size);
+        return;
+    }
+    
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, y, x + size, y + size);
+        return;
+    }
+
+    method void reset(int startX, int startY) {
+        let x = startX;
+        let y = startY;
+        let velocity = 0;
+        return;
+    }
+
+    // Add this dispose method
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}
